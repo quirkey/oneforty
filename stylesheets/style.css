@@ -1,0 +1,67 @@
+body {
+	font-family: Lucida, Arial, sans-serif;
+	margin: 0px;
+	padding: 0px;
+}
+
+img {
+	border: none;
+}
+
+a:link {
+	color: #666;
+}
+a:visited {
+	text-decoration:none;
+	color: #777;
+}
+a:hover {
+	background: #666;
+	text-decoration: none;
+	color: #999;
+}
+#nav {
+	background: #333;
+	margin: 0px;
+	padding: 0px;
+	color: #999;
+	height: 20px;
+	position: fixed;
+	font-size: 10px;
+	width: 100%;
+}
+
+#nav .loading {
+	position: absolute;
+	top: 2px;
+	right: 2px;
+}
+
+#nav div {
+	float: left;
+}
+
+#main {
+	clear: both;
+}
+
+
+
+.tweet {
+	padding: 10px;
+	border-bottom: 1px solid #CCC;
+}
+.tweet-user {
+	width: 60px;
+	float:left;
+}
+.tweets-group .tweet-user img {
+	width: 48px;
+  height: 48px;
+}
+
+
+.clear {
+  height: 0px;
+	clear: both;
+}

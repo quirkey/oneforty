@@ -60,7 +60,7 @@
   // base request wrapper
   
   var makeRequest = function(method, url, params, callback, options) {
-    console.log(makeRequest, arguments);
+    //console.log(makeRequest, arguments);
     if (typeof options == 'undefined') { options = {}; }
     return $.ajax($.extend({
       type: method,

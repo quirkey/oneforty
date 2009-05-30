@@ -50,8 +50,10 @@
   });
   
   var app = $.sammy(function() { with(this) {
-        
-    var user = null;
+    
+							this.debug = true;
+
+							var user, connecting = null;
     
     var timeline = function(name, resource, base_params) {
       if (!timelines[name]) {
@@ -82,16 +84,28 @@
     });
     
     before(function() { with(this) {
-      if (!user) {
+      if (!user && !connecting) {
+				var back = app.currentLocation();
+				if (back.hash.match(/login/)) {
+						back.hash = '#/';
+				}
+				log('back', back);
+				redirect('#/login');
+				connecting = true;
         Twitter.account.verify_credentials(function(user) {
           app.user = user;
           log('Loaded user:', user)
           $('#login').html('Hey <a href="#/me">' + user.screen_name + '</a>');
-          redirect('#/friends');
-        }); 
+          redirect(back.hash);
+					connecting = false;
+				}); 
       }
     }});
     
+							get('#/', function() { with(this) {
+													redirect('#/friends');
+											}});
+
     get('#/login', function() { with(this) {
       $('#main').html('<div class="warning">You need to log in first</div>');
     }});
@@ -120,8 +134,8 @@
     
     bind('rebuild-timelines', function() { with(this) {
       log('rebuild-timelines');
-      var $timelines = $('#timelines');
-      $('#timelines').html('');
+      var $timelines = $('#timelines ul');
+      $timelines.html('');
       $.each(timelines, function(name, timeline) {
         $timelines.append('<li><a href="#/' + timeline.name + '">' + timeline.name + '</a></li>');
       });
@@ -139,6 +153,8 @@
   }});
   
   $(function() {
+					app.log('run');
+					//app.debug = true;
     $.extend(Twitter.ajaxOptions, {
       beforeSend: function(xhr) {
         app.trigger('loading');
@@ -150,7 +166,8 @@
         app.trigger('done-loading');
       }
     });
-    app.run('#/login');
+    app.run();
+		app.log('here');
   });
   
 })(jQuery);

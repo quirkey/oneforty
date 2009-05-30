@@ -576,7 +576,7 @@
         this.last_location = location;
       } catch(e) {
         // unless the error is a 404 and 404s are silenced
-        if (e.match(/^404/) && this.silence_404) {
+					if (e.toString().match(/^404/) && this.silence_404) {
           return returned;
         } else {
           throw(e);
