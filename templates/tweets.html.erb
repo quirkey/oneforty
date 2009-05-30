@@ -1,0 +1,16 @@
+<div class="tweets-group" style="display:none;">
+  <div class="timestamp"><%= Date() %></div>
+<% jQuery.each(tweets, function(i, tweet) { %>
+  <div class="tweet" id="tweet_<%= tweet.id %>">
+    <div class="tweet-user">
+      <a href="#/user/<%= tweet.user.screen_name %>">
+        <img src="<%= tweet.user.profile_image_url %>" alt="<%= tweet.user.screen_name %>" />
+        <strong><%= tweet.user.screen_name %></strong>
+      </a>
+    </div>
+    <div class="tweet-text">
+      <%= autolink(tweet.text) %>
+    </div>
+  </div>
+  <% }); %>
+</div>
