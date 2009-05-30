@@ -88,6 +88,7 @@
 				var back = app.currentLocation();
 				if (back.hash.match(/login/)) {
 						back.hash = '#/';
+
 				}
 				log('back', back);
 				redirect('#/login');

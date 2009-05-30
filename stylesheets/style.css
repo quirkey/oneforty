@@ -23,14 +23,35 @@ a:hover {
 #nav {
 	background: #333;
 	margin: 0px;
-	padding: 0px;
+	padding: 2px;
 	color: #999;
-	height: 20px;
+	height: 14px;
 	position: fixed;
-	font-size: 10px;
+	font-size: 11px;
 	width: 100%;
+	z-index: 10;
 }
 
+#nav #login {
+	padding: 0px 5px;
+}
+
+#nav #timelines ul {
+ list-style-type: none;
+ padding: 0px 4px;
+ margin: 0px;
+}
+#nav #timelines ul li {
+ float:left;
+ padding: 0px;
+ margin: 0px;
+}
+#nav #timelines ul li a {
+ background: #CCC;
+ color: #333;
+ padding: 2px;
+ -moz-border-radius: 4px;
+}
 #nav .loading {
 	position: absolute;
 	top: 2px;
@@ -41,11 +62,35 @@ a:hover {
 	float: left;
 }
 
+
 #main {
 	clear: both;
+	padding-top: 30px;
+	background: #FFF;
 }
 
+.tweets-group {
+  padding: 5px 0px;
+	border-top: 1px solid #E5E5E5;
+	position: relative;
+}
 
+.tweets-group .timestamp, .no-tweets {
+	right: 5px;
+	font-size: 11px;
+	background: #FFF;
+	color: #CCC;
+	padding: 0px 5px; 
+}
+.tweets-group .timestamp {
+	position: absolute;
+	top: -10px;
+	right: 5px;
+}
+.no-tweets {
+ position:relative;
+ padding: 0px 5px;
+}
 
 .tweet {
 	padding: 10px;

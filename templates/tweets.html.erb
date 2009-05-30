@@ -1,5 +1,8 @@
 <div class="tweets-group" style="display:none;">
   <div class="timestamp"><%= Date() %></div>
+<% if (tweets.length ==  0) { %>
+<div class="no-tweets">Nothing new</div>
+<% } else { %>
 <% jQuery.each(tweets, function(i, tweet) { %>
   <div class="tweet" id="tweet_<%= tweet.id %>">
     <div class="tweet-user">
@@ -14,4 +17,5 @@
 		<div class="clear"></div>
   </div>
   <% }); %>
+	<% } %>
 </div>
