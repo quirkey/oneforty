@@ -85,7 +85,7 @@
   
   Sammy = {};
   
-  Sammy.VERSION = '0.1.2';
+  Sammy.VERSION = '0.1.3';
   
   // == Sammy.Object
   //
@@ -255,7 +255,7 @@
           param_names.push(path_match[1]);
         }
         // replace with the path replacement
-        path = new RegExp(path.replace(PATH_NAME_MATCHER, PATH_REPLACER));
+        path = new RegExp(path.replace(PATH_NAME_MATCHER, PATH_REPLACER) + "$");
       }
       var r = {verb: verb, path: path, callback: callback, param_names: param_names};
       // add route to routes array
@@ -359,6 +359,31 @@
       return this._running;
     },
     
+    // Helpers extends the EventContext prototype specific to this app.
+    // This allows you to define app specific helper functions that can be used
+    // whenever you're inside of an event context (templates, routes, bind).
+    // 
+    // === Example
+    //
+    //    var app = $.sammy(function() {
+    //      
+    //      helpers({
+    //        upcase: function(text) {
+    //         return text.toString().toUpperCase();
+    //        }
+    //      });
+    //      
+    //      get('#/', function() { with(this) {
+    //        // inside of this context I can use the helpers
+    //        $('#main').html(upcase($('#main').text());
+    //      }});
+    //      
+    //    });
+    //    
+    // === Arguments
+    // 
+    // +extensions+:: An object collection of functions to extend the context.
+    //  
     helpers: function(extensions) {
       this.context_prototype = this.context_prototype.extend(extensions);
     },
@@ -576,7 +601,7 @@
         this.last_location = location;
       } catch(e) {
         // unless the error is a 404 and 404s are silenced
-					if (e.toString().match(/^404/) && this.silence_404) {
+        if (e.toString().match(/^404/) && this.silence_404) {
           return returned;
         } else {
           throw(e);
@@ -598,7 +623,7 @@
       try { // catch 404s
         returned = this.runRoute(verb, path, params);
       } catch(e) {
-        if (e.match(/^404/) && this.silence_404) {
+        if (e.toString().match(/^404/) && this.silence_404) {
           return true;
         } else {
           throw(e);
