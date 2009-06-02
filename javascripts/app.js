@@ -13,14 +13,21 @@
   $.extend(Timeline.prototype, {
     
     load: function(callback) {
-      var timeline = this;
-      this.resource(this.toParams(), function(tweets) {
-        if (tweets.length > 0) {
-          timeline.since_id = tweets[0].id;
-          timeline.max_id   = tweets[tweets.length - 1].id;
-        }
-        callback(tweets);
-      });
+      var timeline    = this;
+      if (this.$element().length > 0) {
+        this.newer(callback);
+      } else {
+        // create the element
+        var $el = $('<div class="timeline" id="timeline-' + this.name + '">');
+        $el.appendTo('#main');
+        this.resource(this.toParams(), function(tweets) {
+          if (tweets.length > 0) {
+            timeline.since_id = tweets[0].id;
+            timeline.max_id   = tweets[tweets.length - 1].id;
+          }
+          callback(timeline.$element(), tweets);
+        });
+      }
     },
     
     newer: function(callback) {
@@ -29,7 +36,7 @@
         if (tweets.length > 0) {
           timeline.since_id = tweets[0].id;
         }
-        callback(tweets);
+        callback(timeline.$element(), tweets);
       });
     },
     
@@ -39,21 +46,29 @@
         if (tweets.length > 0) {
           timeline.max_id = tweets[0].id;
         }
-        callback(tweets);
+        callback(timeline.$element(), tweets);
       });
     },
     
     toParams: function(params) {
       return $.extend({}, this.base_params, params);
+    },
+    
+    elementSelector: function() {
+      return '.timeline#timeline-' + this.name;
+    },
+    
+    $element: function() {
+      return $(this.elementSelector());
     }
     
   });
   
   var app = $.sammy(function() { with(this) {
     
-							this.debug = true;
+		debug = true;
 
-							var user, connecting = null;
+		var user, connecting = null;
     
     var timeline = function(name, resource, base_params) {
       if (!timelines[name]) {
@@ -62,9 +77,11 @@
       return timelines[name];
     }
     
-    var renderTweets = function(destination, context) {
-      return function(tweets) {
+    var renderTweets = function(context) {
+      return function(destination, tweets) {
+         context.log('rendering tweets', destination, tweets);
          context.partial('templates/tweets.html.erb', {tweets: tweets}, function(html) {
+           context.log('rendering partial for tweets');
            $(html).prependTo(destination).show('slow');
            context.trigger('rebuild-timelines');
          });
@@ -87,8 +104,7 @@
       if (!user && !connecting) {
 				var back = app.currentLocation();
 				if (back.hash.match(/login/)) {
-						back.hash = '#/';
-
+					back.hash = '#/';
 				}
 				log('back', back);
 				redirect('#/login');
@@ -99,21 +115,22 @@
           $('#login').html('Hey <a href="#/me">' + user.screen_name + '</a>');
           redirect(back.hash);
 					connecting = false;
-				}); 
+				});
+				return false;
       }
     }});
     
-							get('#/', function() { with(this) {
-													redirect('#/friends');
-											}});
-
+    get('#/', function() { with(this) {
+    		redirect('#/friends');
+    }});
+    
     get('#/login', function() { with(this) {
       $('#main').html('<div class="warning">You need to log in first</div>');
     }});
     
     get('#/friends', function() { with(this) {
       $('#main').html('');
-      timeline('friends', Twitter.statuses.friends_timeline).load(renderTweets('#main', this));
+      timeline('friends', Twitter.statuses.friends_timeline).load(renderTweets(this));
     }});
     
     get('#/user/:screen_name', function() { with(this) {
@@ -154,8 +171,7 @@
   }});
   
   $(function() {
-					app.log('run');
-					//app.debug = true;
+		//app.debug = true;
     $.extend(Twitter.ajaxOptions, {
       beforeSend: function(xhr) {
         app.trigger('loading');
