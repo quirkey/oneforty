@@ -7,17 +7,18 @@
     this.since_id    = null;
     this.max_id      = null;
     this.resource    = resource;
-    this.base_params = base_params;
+    this.base_params = $.extend({count: 100}, base_params || {});
   }
   
   $.extend(Timeline.prototype, {
     
-    load: function(callback) {
+    load: function(event_context) {
       var timeline    = this;
       if (this.$element().length > 0) {
         this.newer(callback);
       } else {
         // create the element
+        event_context.trigger('loading');
         var $el = $('<div class="timeline" id="timeline-' + this.name + '">');
         $el.appendTo('#main');
         this.resource(this.toParams(), function(tweets) {
@@ -25,28 +26,30 @@
             timeline.since_id = tweets[0].id;
             timeline.max_id   = tweets[tweets.length - 1].id;
           }
-          callback(timeline.$element(), tweets);
+          timeline.renderTweets(event_context, tweets);
         });
       }
     },
     
-    newer: function(callback) {
+    newer: function(event_context) {
       var timeline = this;
+      event_context.trigger('loading');
       this.resource(this.toParams({since_id: this.since_id}), function(tweets) {
         if (tweets.length > 0) {
           timeline.since_id = tweets[0].id;
         }
-        callback(timeline.$element(), tweets);
+        timeline.renderTweets(event_context, tweets);
       });
     },
     
-    older: function(callback) {
+    older: function(event_context) {
       var timeline = this;
+      event_context.trigger('loading');
       this.resource(this.toParams({max_id: this.max_id}), function(tweets) {
         if (tweets.length > 0) {
           timeline.max_id = tweets[0].id;
         }
-        callback(timeline.$element(), tweets);
+        timeline.renderTweets(event_context, tweets);
       });
     },
     
@@ -60,13 +63,24 @@
     
     $element: function() {
       return $(this.elementSelector());
+    },
+    
+    renderTweets: function(event_context, tweets) {
+      var destination = this.$element();
+      event_context.log('rendering tweets', destination, tweets);
+      event_context.partial('templates/tweets.html.erb', {tweets: tweets}, function(html) {
+        event_context.log('rendering partial for tweets');
+        $(html).prependTo(destination).show('slow');
+        event_context.trigger('rebuild-timelines');
+        event_context.trigger('done-loading');
+      });
     }
     
   });
   
   var app = $.sammy(function() { with(this) {
     
-		debug = true;
+    // debug = true;
 
 		var user, connecting = null;
     
@@ -76,18 +90,7 @@
       } 
       return timelines[name];
     }
-    
-    var renderTweets = function(context) {
-      return function(destination, tweets) {
-         context.log('rendering tweets', destination, tweets);
-         context.partial('templates/tweets.html.erb', {tweets: tweets}, function(html) {
-           context.log('rendering partial for tweets');
-           $(html).prependTo(destination).show('slow');
-           context.trigger('rebuild-timelines');
-         });
-       };
-    };
-    
+        
     helpers({
       autolink: function(text) {
         return text
@@ -119,9 +122,9 @@
 				return false;
       }
     }});
-    
+        
     get('#/', function() { with(this) {
-    		redirect('#/friends');
+    	redirect('#/friends');
     }});
     
     get('#/login', function() { with(this) {
@@ -130,7 +133,7 @@
     
     get('#/friends', function() { with(this) {
       $('#main').html('');
-      timeline('friends', Twitter.statuses.friends_timeline).load(renderTweets(this));
+      timeline('friends', Twitter.statuses.friends_timeline).load(this);
     }});
     
     get('#/user/:screen_name', function() { with(this) {
@@ -143,10 +146,12 @@
     }});
     
     bind('loading', function() { with(this) {
+      log('loading');
       $('.loading').show();
     }});
     
     bind('done-loading', function() { with(this) {
+      log('done-loading');
       $('.loading').hide();
     }});
     
@@ -163,7 +168,7 @@
       var context = this;
       $('#timelines li a').live('click', function() {
         if (context.app.currentLocation().hash == $(this).attr('href')) {
-          timelines[$(this).attr('href').replace('#/', '')].newer(renderTweets('#main', context));
+          timelines[$(this).attr('href').replace('#/', '')].newer(context);
         }
       });
     }});
@@ -173,18 +178,11 @@
   $(function() {
 		//app.debug = true;
     $.extend(Twitter.ajaxOptions, {
-      beforeSend: function(xhr) {
-        app.trigger('loading');
-      },
       error: function() {
         app.trigger('error', arguments);
-      },
-      complete: function() {
-        app.trigger('done-loading');
       }
     });
-    app.run();
-		app.log('here');
+    app.run('#/login');
   });
   
 })(jQuery);
