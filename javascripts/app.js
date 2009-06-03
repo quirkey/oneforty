@@ -1,5 +1,7 @@
 (function($) {
-
+  
+  $.easing.def = "easeInOutQuart";
+  
   timelines = {};
   
   function Timeline(name, resource, base_params) {
@@ -7,7 +9,7 @@
     this.since_id    = null;
     this.max_id      = null;
     this.resource    = resource;
-    this.base_params = $.extend({count: 100}, base_params || {});
+    this.base_params = $.extend({count: 50}, base_params || {});
   }
   
   $.extend(Timeline.prototype, {
@@ -15,11 +17,13 @@
     load: function(event_context) {
       var timeline    = this;
       if (this.$element().length > 0) {
-        this.newer(callback);
+        event_context.log('timeline exists');
+        this.newer(event_context);
       } else {
+        event_context.log('timeline is new');
         // create the element
         event_context.trigger('loading');
-        var $el = $('<div class="timeline" id="timeline-' + this.name + '">');
+        var $el = $('<div class="timeline" style="display:none;" id="' + timeline.elementID() + '">');
         $el.appendTo('#main');
         this.resource(this.toParams(), function(tweets) {
           if (tweets.length > 0) {
@@ -57,15 +61,23 @@
       return $.extend({}, this.base_params, params);
     },
     
-    elementSelector: function() {
-      return '.timeline#timeline-' + this.name;
+    elementID: function() {
+      return 'timeline-' + this.name.replace('/','-');
     },
     
     $element: function() {
-      return $(this.elementSelector());
+      return $('#' + this.elementID());
+    },
+    
+    show: function() {
+      // hide the other ones
+      var width = $(window).width();
+      $('.timeline:visible').animate({queue: false, left: "-" + width}, 400);
+      this.$element().css({left: width}).animate({left: '0px', width: width}, 400).show();
     },
     
     renderTweets: function(event_context, tweets) {
+      var timeline = this;
       var destination = this.$element();
       event_context.log('rendering tweets', destination, tweets);
       event_context.partial('templates/tweets.html.erb', {tweets: tweets}, function(html) {
@@ -73,6 +85,7 @@
         $(html).prependTo(destination).show('slow');
         event_context.trigger('rebuild-timelines');
         event_context.trigger('done-loading');
+        timeline.show();
       });
     }
     
@@ -120,6 +133,8 @@
 					connecting = false;
 				});
 				return false;
+      } else if(user) {
+        $('#login_warning').hide();
       }
     }});
         
@@ -128,17 +143,15 @@
     }});
     
     get('#/login', function() { with(this) {
-      $('#main').html('<div class="warning">You need to log in first</div>');
+      $('#main').html('<div id="login_warning" class="warning">Sorry, You need to log in first.</div>');
     }});
     
     get('#/friends', function() { with(this) {
-      $('#main').html('');
       timeline('friends', Twitter.statuses.friends_timeline).load(this);
     }});
     
     get('#/user/:screen_name', function() { with(this) {
-      $('#main').html('');
-      timeline('user/' + this.params.screen_name, Twitter.statuses.user_timeline, {screen_name: this.params.screen_name}).load(renderTweets('#main', this));
+      timeline('user/' + this.params.screen_name, Twitter.statuses.user_timeline, {screen_name: this.params.screen_name}).load(this);
     }});
         
     post('#/update', function() { with(this) {
