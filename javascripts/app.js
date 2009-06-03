@@ -153,7 +153,13 @@
     get('#/user/:screen_name', function() { with(this) {
       timeline('user/' + this.params.screen_name, Twitter.statuses.user_timeline, {screen_name: this.params.screen_name}).load(this);
     }});
-        
+    
+    get(/\#\/kill_timeline\/(.*)$/, function() { with(this) {
+      delete timelines[params['splat']];
+      trigger('rebuild-timelines');
+      redirect('#/friends');
+    }});
+    
     post('#/update', function() { with(this) {
       
     }});
@@ -173,7 +179,7 @@
       var $timelines = $('#timelines ul');
       $timelines.html('');
       $.each(timelines, function(name, timeline) {
-        $timelines.append('<li><a href="#/' + timeline.name + '">' + timeline.name + '</a></li>');
+        $timelines.append('<li><a href="#/' + timeline.name + '">' + timeline.name + '</a><a class="kill" href="#/kill_timeline/'+ timeline.name +'">x</a></li>');
       });
     }});
     
