@@ -4,7 +4,7 @@ body {
 	padding: 0px;
 }
 
-img {
+img, a img {
 	border: none;
 }
 
@@ -16,7 +16,7 @@ a:visited {
 	color: #777;
 }
 a:hover {
-	background: #666;
+/*  background: #666;*/
 	text-decoration: none;
 	color: #999;
 }
@@ -35,23 +35,39 @@ a:hover {
 #nav #login {
 	padding: 0px 5px;
 }
-
-#nav #timelines ul {
+#nav img {
+  vertical-align: middle;
+}
+#nav ul {
  list-style-type: none;
  padding: 0px 4px;
  margin: 0px;
 }
-#nav #timelines ul li {
+#nav ul li {
  float:left;
  padding: 0px;
- margin: 0px;
+ margin: 0px 4px;
 }
 #nav #timelines ul li a {
  background: #CCC;
  color: #333;
- padding: 2px;
- -moz-border-radius: 4px;
+ padding: 2px 4px;
+ -moz-border-radius-topleft: 4px;
+ -moz-border-radius-bottomleft: 4px;
 }
+#nav #timelines ul li.active a {
+  background:#D86F40;
+  color:#FFF;
+}
+#nav #timelines ul li a.kill {
+  padding: 2px;
+  background:#7E7E7E;
+  -moz-border-radius-topleft: 0px;
+  -moz-border-radius-bottomleft: 0px;
+  -moz-border-radius-topright: 4px;
+  -moz-border-radius-bottomright: 4px;
+}
+
 #nav .loading {
 	position: absolute;
 	top: 2px;
@@ -68,6 +84,25 @@ a:hover {
 	padding-top: 30px;
 	background: #FFF;
 }
+
+#update {
+  position: absolute;
+  top: 10px;
+  padding: 20px 0px;
+  width: 100%;
+  background: #7D7D7D;
+}
+#update textarea {
+  margin: 4px;
+  width: 96%;
+  height: 40px;
+  padding: 4px;
+  font-size: 18px;
+	font-family: Lucida, Arial, sans-serif;
+  font-weight: bold;
+  border: 1px solid #CCC;
+}
+
 
 .timeline {
   position: absolute;

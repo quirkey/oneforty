@@ -23,7 +23,7 @@
         event_context.log('timeline is new');
         // create the element
         event_context.trigger('loading');
-        var $el = $('<div class="timeline" style="display:none;" id="' + timeline.elementID() + '">');
+        var $el = $('<div class="timeline" style="display:none;" id="' + timeline.elementID() + '"></div>');
         $el.appendTo('#main');
         this.resource(this.toParams(), function(tweets) {
           if (tweets.length > 0) {
@@ -89,7 +89,7 @@
       options = $.extend({}, options);
       event_context.log('rendering tweets', $destination, tweets);
       event_context.partial('templates/tweets.html.erb', {tweets: tweets}, function(html) {
-        event_context.log('rendering partial for tweets')
+        event_context.log('rendering partial for tweets', html);
         $destination.find('.older').hide('slow').remove();
         if (options['after']) {
           $(html).appendTo($destination).show('slow');
@@ -161,7 +161,7 @@
     }});
     
     get('#/friends', function() { with(this) {
-      timeline('friends', Twitter.statuses.friends_timeline).load(this);
+      
     }});
     
     get('#/user/:screen_name', function() { with(this) {
@@ -174,9 +174,32 @@
       redirect('#/friends');
     }});
     
-    post('#/update', function() { with(this) {
-      
-    }});
+    // Unfortunately theres no post over JSON-P
+    // get('#/update', function() { with(this) {
+    //   var $form = $element().find('#update');
+    //   if ($form.length == 0) {
+    //     // create the form
+    //     partial('templates/form.html.erb', function(html) {
+    //       $form = $(html);
+    //       $('#main').before($form);
+    //       $form.slideDown();
+    //     });
+    //   } else {
+    //     // display the form
+    //     $form.slideDown();
+    //   }
+    // }});
+    // 
+    // post('#/update', function() { with(this) {
+    //   try {
+    //   Twitter.statuses.update({status: params['message']}, function() {
+    //     redirect('#/friends');
+    //   })
+    //   } catch(e) {
+    //     log(e);
+    //   }
+    //   return false;
+    // }});
     
     bind('loading', function() { with(this) {
       log('loading');
@@ -194,7 +217,9 @@
       var $timelines = $('#timelines ul');
       $timelines.html('');
       $.each(timelines, function(name, timeline) {
-        $timelines.append('<li><a class="timeline-name" href="#/' + timeline.name + '">' + timeline.name + '</a><a class="kill" href="#/kill_timeline/'+ timeline.name +'">x</a></li>');
+        var $html = $('<li><a class="timeline-name" href="#/' + timeline.name + '">' + timeline.name + '</a><a class="kill" href="#/kill_timeline/'+ timeline.name +'"><img src="images/icon_x.png" alt="x"/></a></li>');
+        if (name == context.app.getLocation().replace('#/','')) $html.addClass('active');
+        $html.appendTo($timelines);
       });
     }});
     
@@ -209,6 +234,10 @@
       $('.older').live('click', function() {
         timelines[$(this).attr('rel')].older(context);
       });
+      
+      // set up friends
+      timeline('friends', Twitter.statuses.friends_timeline).load(this);
+      
     }});
     
   }});
