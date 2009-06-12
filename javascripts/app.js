@@ -142,12 +142,13 @@
         Twitter.account.verify_credentials(function(user) {
           app.user = user;
           log('Loaded user:', user)
-          $('#login').html('Hey <a href="#/me">' + user.screen_name + '</a>');
+          app.trigger('display-login');
           redirect(back);
 					connecting = false;
 				});
 				return false;
       } else if(user) {
+        app.trigger('display-login');
         $('#login_warning').hide();
       }
     }});
@@ -160,9 +161,11 @@
       $('#main').html('<div id="login_warning" class="warning">Sorry, You need to log in first.</div>');
     }});
     
-    get('#/friends', function() { with(this) {
-      
+    
+    get('#/me', function() { with(this) {
+      redirect('#/user/' + user.screen_name);
     }});
+
     
     get('#/user/:screen_name', function() { with(this) {
       timeline('user/' + this.params.screen_name, Twitter.statuses.user_timeline, {screen_name: this.params.screen_name}).load(this);
@@ -200,6 +203,10 @@
     //   }
     //   return false;
     // }});
+    
+    bind('display-login', function() {
+      $('#login').html('Hey <a href="#/me">' + user.screen_name + '</a>');        
+    });
     
     bind('loading', function() { with(this) {
       log('loading');

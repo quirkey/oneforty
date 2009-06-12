@@ -53,7 +53,6 @@ a:hover {
  color: #333;
  padding: 2px 4px;
  -moz-border-radius-topleft: 4px;
- -moz-border-radius-bottomleft: 4px;
 }
 #nav #timelines ul li.active a {
   background:#D86F40;
@@ -63,9 +62,7 @@ a:hover {
   padding: 2px;
   background:#7E7E7E;
   -moz-border-radius-topleft: 0px;
-  -moz-border-radius-bottomleft: 0px;
   -moz-border-radius-topright: 4px;
-  -moz-border-radius-bottomright: 4px;
 }
 
 #nav .loading {
@@ -85,7 +82,7 @@ a:hover {
 	background: #FFF;
 }
 
-#update {
+/*#update {
   position: absolute;
   top: 10px;
   padding: 20px 0px;
@@ -98,11 +95,11 @@ a:hover {
   height: 40px;
   padding: 4px;
   font-size: 18px;
-	font-family: Lucida, Arial, sans-serif;
+  font-family: Lucida, Arial, sans-serif;
   font-weight: bold;
   border: 1px solid #CCC;
 }
-
+*/
 
 .timeline {
   position: absolute;
