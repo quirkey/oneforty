@@ -175,11 +175,12 @@
     }});
     
     bind('rebuild-timelines', function() { with(this) {
+      var context = this;
       log('rebuild-timelines');
       var $timelines = $('#timelines ul');
       $timelines.html('');
       $.each(timelines, function(name, timeline) {
-        $timelines.append('<li><a href="#/' + timeline.name + '">' + timeline.name + '</a><a class="kill" href="#/kill_timeline/'+ timeline.name +'">x</a></li>');
+        $timelines.append('<li><a class="timeline-name" href="#/' + timeline.name + '">' + timeline.name + '</a><a class="kill" href="#/kill_timeline/'+ timeline.name +'">x</a></li>');
       });
     }});
     

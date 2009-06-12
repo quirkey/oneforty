@@ -56,18 +56,19 @@
       "var p=[],print=function(){p.push.apply(p,arguments);};" +
 
       // Introduce the data as local variables using with(){}
-      "with(obj){p.push('" +
+      "with(obj){p.push(\"" +
 
       // Convert the template into pure JavaScript
       template
         .replace(/[\r\t\n]/g, " ")
+        .replace(/\"/g, '\\"')
         .split("<%").join("\t")
-        .replace(/((^|%>)[^\t]*)'/g, "$1\r")
-        .replace(/\t=(.*?)%>/g, "',$1,'")
-        .split("\t").join("');")
-        .split("%>").join("p.push('")
-        .split("\r").join("\\'")
-        + "');}return p.join('');");
+        .replace(/((^|%>)[^\t]*)/g, "$1\r")
+        .replace(/\t=(.*?)%>/g, "\",$1,\"")
+        .split("\t").join("\");")
+        .split("%>").join("p.push(\"")
+        .split("\r").join("")
+        + "\");}return p.join('');");
     }
     
     if (typeof data != 'undefined') {
@@ -85,7 +86,7 @@
   
   Sammy = {};
   
-  Sammy.VERSION = '0.1.4';
+  Sammy.VERSION = '0.2.0';
   
   // == Sammy.Object
   //
@@ -105,6 +106,17 @@
       return $.extend({}, obj);
     },
     
+    // Returns a copy of the object with Functions removed.
+    toHash: function() {
+      var json = {}; 
+      this.each(function(k,v) {
+        if (!$.isFunction(v)) {
+          json[k] = v
+        }
+      });
+      return json;
+    },
+    
     // Renders a simple HTML version of this Objects attributes.
     // Does not render functions.
     // For example. Given this Sammy.Object:
@@ -115,7 +127,7 @@
     toHTML: function() {
       var display = "";
       this.each(function(k, v) {
-        if (v.constructor != Function) {
+        if (!$.isFunction(v)) {
           display += "<strong>" + k + "</strong> " + v + "<br />";
         }
       });
@@ -418,13 +430,15 @@
       // set data for app
       this.$element().data(this.data_store_name, this);
       // set last location
-      this.last_location = {href: '', pathname: '', hash: ''};
-      if (typeof start_url != 'undefined') window.location = start_url;
+      this.last_location = null;
+      if (this.getLocation() == '' && typeof start_url != 'undefined') {
+        this.setLocation(start_url);
+      } 
       // check url
-      this._checkURL();
+      this._checkLocation();
       // set interval for url check
       this._interval = setInterval(function () {
-        app._checkURL.apply(app);
+        app._checkLocation.apply(app);
       }, this.run_interval_every);
       
       // bind re-binding to after route
@@ -556,17 +570,52 @@
         context.trigger('event-context-before');
         var returned = route.callback.apply(context);
         context.trigger('event-context-after');
-        context.trigger('changed');
         return returned;
       } else {
         this.notFound(verb, path);
       }
     },
     
-    // Returns a cloned location object.
-    currentLocation: function() {
-      var location = this.clone(window.location);
-      return location;
+    // The default behavior is to return the current window's location hash.
+    // Override this and <tt>setLocation()</tt> to detach the app from the 
+    // window.location object.
+    getLocation: function() {
+      return this.clone(window.location).hash.toString();
+    },
+    
+    // The default behavior is to set the current window's location.
+    // Override this and <tt>getLocation()</tt> to detach the app from the 
+    // window.location object.
+    //
+    // === Arguments
+    // 
+    // +new_location+:: A new location string (e.g. '#/')
+    //
+    setLocation: function(new_location) {
+      window.location = new_location;
+    },
+    
+    // Swaps the content of <tt>$element()</tt> with <tt>content</tt>
+    // You can override this method to provide an alternate swap behavior
+    // for <tt>EventContext.partial()</tt>.
+    // 
+    // === Example
+    //
+    //    var app = $.sammy(function() {
+    //      
+    //      // implements a 'fade out'/'fade in'
+    //      this.swap = function(content) {
+    //        this.$element().hide('slow').html(content).show('slow');
+    //      }
+    //      
+    //      get('#/', function() {
+    //        this.partial('index.html.erb') // will fade out and in
+    //      });
+    //      
+    //    });
+    //
+    swap: function(content) {
+      return this.$element().html(content);
     },
     
     // This thows a '404 Not Found' error.
@@ -582,23 +631,22 @@
       }
     },
     
-    _checkURL: function() {
+    _checkLocation: function() {
       try { // try, catch 404s
         // get current location
         var location, returned;
-        location = this.currentLocation();
+        location = this.getLocation();
         // compare to see if hash has changed
-        if (location.hash != '' && location.hash != this.last_location.hash) {
+        if (location != this.last_location) {
           // lookup route for current hash
-          returned = this.runRoute('get', location.hash);
+          returned = this.runRoute('get', location);
         // compare to see if path has changed
-        } else if (location.pathname != this.last_location.pathname) {
-          // lookup route for current path
-          returned = this.runRoute('get', location.pathname)
         }
         // reset last location
         this.last_location = location;
       } catch(e) {
+        // reset last location
+        this.last_location = location;
         // unless the error is a 404 and 404s are silenced
         if (e.toString().match(/^404/) && this.silence_404) {
           return returned;
@@ -725,7 +773,7 @@
         } else {
           // we should use the default callback
           callback = function(data) {
-            context.app.$element().html(data);
+            context.app.swap(data);
           }
         }
       }
@@ -750,14 +798,7 @@
     // '#' it only changes the document's hash.  
     redirect: function(to) {
       this.trigger('redirect', {to: to});
-      if (to.match(/^\#/)) {
-        window.location.hash = to;
-      } else if (to.match(/^\//)) {
-        window.location.pathname = to;
-      } else {
-        window.location = to;
-      }
-      return true;
+      return this.app.setLocation(to);
     },
     
     // Triggers events on <tt>app</tt> within the current context.
