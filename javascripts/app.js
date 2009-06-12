@@ -30,7 +30,7 @@
             timeline.since_id = tweets[0].id;
             timeline.max_id   = tweets[tweets.length - 1].id;
           }
-          timeline.renderTweets(event_context, tweets);
+          timeline.renderTweets(event_context, tweets, {animate: true});
         });
       }
     },
@@ -42,7 +42,7 @@
         if (tweets.length > 0) {
           timeline.since_id = tweets[0].id;
         }
-        timeline.renderTweets(event_context, tweets);
+        timeline.renderTweets(event_context, tweets, {animate: false});
       });
     },
     
@@ -51,9 +51,10 @@
       event_context.trigger('loading');
       this.resource(this.toParams({max_id: this.max_id}), function(tweets) {
         if (tweets.length > 0) {
-          timeline.max_id = tweets[0].id;
+          timeline.max_id = tweets[tweets.length - 1].id;
         }
-        timeline.renderTweets(event_context, tweets);
+        tweets.pop(); // have to pop the first tweet as it was the former max_id
+        timeline.renderTweets(event_context, tweets, {after: true, animate: false});
       });
     },
     
@@ -69,23 +70,36 @@
       return $('#' + this.elementID());
     },
     
-    show: function() {
+    show: function(animate) {
       // hide the other ones
-      var width = $(window).width();
-      $('.timeline:visible').animate({queue: false, left: "-" + width}, 400);
-      this.$element().css({left: width}).animate({left: '0px', width: width}, 400).show();
+      var $old_element = $('.timeline:visible');
+      if (animate) {
+        var width = $(window).width();
+        $old_element.animate({queue: false, left: "-" + width}, 400);
+        this.$element().css({left: width}).animate({left: '0px', width: width}, 400).show();
+      } else {
+        $old_element.hide();
+        this.$element().show();
+      }
     },
     
-    renderTweets: function(event_context, tweets) {
+    renderTweets: function(event_context, tweets, options) {
       var timeline = this;
-      var destination = this.$element();
-      event_context.log('rendering tweets', destination, tweets);
+      var $destination = this.$element();
+      options = $.extend({}, options);
+      event_context.log('rendering tweets', $destination, tweets);
       event_context.partial('templates/tweets.html.erb', {tweets: tweets}, function(html) {
-        event_context.log('rendering partial for tweets');
-        $(html).prependTo(destination).show('slow');
+        event_context.log('rendering partial for tweets')
+        $destination.find('.older').hide('slow').remove();
+        if (options['after']) {
+          $(html).appendTo($destination).show('slow');
+        } else {
+          $(html).prependTo($destination).show('slow');
+        }
+        $destination.append('<div class="older" rel="' + timeline.name + '">More</div>');
         event_context.trigger('rebuild-timelines');
         event_context.trigger('done-loading');
-        timeline.show();
+        timeline.show((typeof options['animate'] == undefined || options['animate'] == true));
       });
     }
     
@@ -118,8 +132,8 @@
     
     before(function() { with(this) {
       if (!user && !connecting) {
-				var back = app.currentLocation();
-				if (back.hash.match(/login/)) {
+				var back = app.getLocation();
+				if (back.match(/login/)) {
 					back.hash = '#/';
 				}
 				log('back', back);
@@ -129,7 +143,7 @@
           app.user = user;
           log('Loaded user:', user)
           $('#login').html('Hey <a href="#/me">' + user.screen_name + '</a>');
-          redirect(back.hash);
+          redirect(back);
 					connecting = false;
 				});
 				return false;
@@ -187,9 +201,13 @@
     bind('run', function() { with(this) {
       var context = this;
       $('#timelines li a').live('click', function() {
-        if (context.app.currentLocation().hash == $(this).attr('href')) {
+        if (context.app.getLocation() == $(this).attr('href')) {
           timelines[$(this).attr('href').replace('#/', '')].newer(context);
         }
+      });
+      
+      $('.older').live('click', function() {
+        timelines[$(this).attr('rel')].older(context);
       });
     }});
     
