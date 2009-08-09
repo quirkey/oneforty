@@ -235,6 +235,7 @@
       $('#timelines li a').live('click', function() {
         if (context.app.getLocation() == $(this).attr('href')) {
           timelines[$(this).attr('href').replace('#/', '')].newer(context);
+          return false;
         }
       });
       
